@@ -30,21 +30,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN useradd -m -s /bin/bash eks \
   && echo 'eks ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-# Homebrew (install as root, accessible to all users)
-RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
-
-COPY base.Brewfile /tmp/base.Brewfile
-RUN brew bundle --file /tmp/base.Brewfile
-
-# node / npm / npx / pnpm
-RUN brew install node@24 || brew install node
-ENV PATH="/home/linuxbrew/.linuxbrew/opt/node@24/bin:/home/linuxbrew/.linuxbrew/opt/node/bin:${PATH}"
-RUN npm install -g pnpm@latest
-
-# AI tools (global npm packages, install before switching user)
-RUN npm i -g @openai/codex
-
 # Switch to eks user
 USER eks
 
@@ -56,6 +41,18 @@ COPY --chown=eks:eks .bashrcx /home/eks/.bashrcx
 RUN echo 'source /home/eks/.bashrcx' >> /home/eks/.bashrc
 
 COPY --chown=eks:eks .tmux.conf /home/eks/.tmux.conf
+
+# Homebrew
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
+
+COPY --chown=eks:eks base.Brewfile /tmp/base.Brewfile
+RUN brew bundle --file /tmp/base.Brewfile
+
+# node / npm / npx / pnpm
+RUN brew install node@24 || brew install node
+ENV PATH="/home/linuxbrew/.linuxbrew/opt/node@24/bin:/home/linuxbrew/.linuxbrew/opt/node/bin:${PATH}"
+RUN npm install -g pnpm@latest
 
 # uv / uvx
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -69,8 +66,9 @@ ENV PATH="/home/eks/.bun/bin:${PATH}"
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
 ENV PATH="/home/eks/.cargo/bin:${PATH}"
 
-# Claude Code
+# AI tools
 RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN npm i -g @openai/codex
 
 WORKDIR /home/eks
 CMD ["bash"]
