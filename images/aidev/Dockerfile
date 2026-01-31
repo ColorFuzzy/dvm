@@ -46,14 +46,8 @@ COPY --chown=eks:eks .tmux.conf /home/eks/.tmux.conf
 RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 
-RUN brew install gcc
-RUN brew install tmux
-RUN brew install ripgrep
-RUN brew install fd
-RUN brew install tree
-RUN brew install zoxide
-RUN brew install mise
-RUN brew install vim
+COPY --chown=eks:eks Brewfile /tmp/Brewfile
+RUN brew bundle --file /tmp/Brewfile
 
 # node / npm / npx / pnpm
 RUN brew install node@24 || brew install node
