@@ -1,0 +1,8 @@
+brew "gcc"
+brew "tmux"
+brew "ripgrep"
+brew "fd"
+brew "tree"
+brew "zoxide"
+brew "mise"
+brew "vim"
