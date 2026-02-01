@@ -14,6 +14,7 @@ RUN apt-get update \
     unzip \
     locales \
     tzdata \
+    telnet \
     sudo \
   && rm -rf /var/lib/apt/lists/*
 
