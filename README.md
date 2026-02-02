@@ -1,6 +1,7 @@
 # dvm
 
 用目录来管理 Dockerfile，并通过 GitHub Actions 自动构建并推送到 Docker Hub。
+如果手工编译, 使用: `docker build -t aidev -f images/aidev/Dockerfile images/aidev/`
 
 ## 目录规范
 - 一个镜像 = 一个目录
