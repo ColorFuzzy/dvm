@@ -61,7 +61,7 @@ ENV PATH="/home/eks/.local/bin:${PATH}"
 RUN curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
 
 # pnpm
-RUN npm install -g pnpm@latest
+RUN sudo npm install -g pnpm@latest
 
 # uv / uvx
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -76,7 +76,7 @@ ENV PATH="/home/eks/.cargo/bin:${PATH}"
 
 # AI tools
 RUN curl -fsSL https://claude.ai/install.sh | bash
-RUN npm i -g @openai/codex
+RUN sudo npm i -g @openai/codex
 
 WORKDIR /home/eks
 CMD ["bash"]
