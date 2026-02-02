@@ -2,9 +2,8 @@ FROM ubuntu:24.04
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
-ENV HOMEBREW_NO_ANALYTICS=1
-ENV HOMEBREW_NO_AUTO_UPDATE=1
 
+# Core apt packages (gcc is included in build-essential)
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -16,6 +15,17 @@ RUN apt-get update \
     tzdata \
     telnet \
     sudo \
+    tmux \
+    ripgrep \
+    fd-find \
+    tree \
+    vim \
+  && ln -sf /usr/bin/fdfind /usr/bin/fd \
+  && rm -rf /var/lib/apt/lists/*
+
+# Node.js 24 via NodeSource
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+  && apt-get install -y --no-install-recommends nodejs \
   && rm -rf /var/lib/apt/lists/*
 
 # Locale
@@ -43,21 +53,18 @@ RUN echo 'source /home/eks/.bashrcx' >> /home/eks/.bashrc
 
 COPY --chown=eks:eks .tmux.conf /home/eks/.tmux.conf
 
-# Homebrew
-RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
+# mise (project toolchain manager)
+RUN curl https://mise.run | sh
+ENV PATH="/home/eks/.local/bin:${PATH}"
 
-COPY --chown=eks:eks Brewfile /tmp/Brewfile
-RUN brew bundle --file /tmp/Brewfile
+# zoxide (smart cd)
+RUN curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
 
-# node / npm / npx / pnpm
-RUN brew install node@24 || brew install node
-ENV PATH="/home/linuxbrew/.linuxbrew/opt/node@24/bin:/home/linuxbrew/.linuxbrew/opt/node/bin:${PATH}"
+# pnpm
 RUN npm install -g pnpm@latest
 
 # uv / uvx
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/home/eks/.local/bin:${PATH}"
 
 # bun / bunx
 RUN curl -fsSL https://bun.com/install | bash
