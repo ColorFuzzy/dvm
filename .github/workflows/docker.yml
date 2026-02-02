@@ -28,6 +28,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Generate date tag
+        id: date
+        run: echo "tag=$(date -u +'%Y%m%d-%H%M')" >> "$GITHUB_OUTPUT"
+
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -35,7 +39,7 @@ jobs:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/dvm-${{ matrix.name }}
           tags: |
             type=raw,value=latest
-            type=sha,format=short
+            type=raw,value=${{ steps.date.outputs.tag }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
