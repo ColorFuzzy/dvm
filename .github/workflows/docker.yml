@@ -26,7 +26,6 @@ jobs:
 
           platforms = [
               {"platform": "linux/amd64",      "suffix": "amd64"},
-              {"platform": "linux/arm64/v8",    "suffix": "arm64"},
           ]
 
           dirs = sorted({p.parent.as_posix()
@@ -57,7 +56,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub

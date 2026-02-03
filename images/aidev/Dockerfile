@@ -2,14 +2,15 @@ FROM ubuntu:24.04
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
+ENV HOMEBREW_NO_ANALYTICS=1
+ENV HOMEBREW_NO_AUTO_UPDATE=1
 
-# Core apt packages (gcc is included in build-essential)
+# Core apt packages
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     git \
-    git-lfs \
     build-essential \
     openssh-client \
     unzip \
@@ -17,24 +18,6 @@ RUN apt-get update \
     tzdata \
     telnet \
     sudo \
-    tmux \
-    ripgrep \
-    fd-find \
-    tree \
-    vim \
-  && ln -sf /usr/bin/fdfind /usr/bin/fd \
-  && rm -rf /var/lib/apt/lists/*
-
-# git-delta (syntax-highlighting pager for git)
-RUN ARCH=$(dpkg --print-architecture) \
-  && DELTA_VER="0.18.2" \
-  && curl -fsSL "https://github.com/dandavison/delta/releases/download/${DELTA_VER}/git-delta_${DELTA_VER}_${ARCH}.deb" -o /tmp/delta.deb \
-  && dpkg -i /tmp/delta.deb \
-  && rm /tmp/delta.deb
-
-# Node.js 24 via NodeSource
-RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
-  && apt-get install -y --no-install-recommends nodejs \
   && rm -rf /var/lib/apt/lists/*
 
 # Locale
@@ -53,29 +36,32 @@ RUN useradd -m -s /bin/bash eks \
 # Switch to eks user
 USER eks
 
-# Git LFS
-RUN git lfs install
-
 # oh-my-bash
 RUN bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" || true
 RUN sed -i 's/^OSH_THEME=.*/OSH_THEME="brainy"/' /home/eks/.bashrc
 
 RUN echo 'source /home/eks/.bashrcx' >> /home/eks/.bashrc
 
+# Homebrew
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
+
+COPY --chown=eks:eks Brewfile /tmp/Brewfile
+RUN brew bundle --file /tmp/Brewfile
+
+# Git LFS
+RUN git lfs install
+
+# node / npm / npx / pnpm
+RUN brew install node@24 || brew install node
+ENV PATH="/home/linuxbrew/.linuxbrew/opt/node@24/bin:/home/linuxbrew/.linuxbrew/opt/node/bin:${PATH}"
+RUN npm install -g pnpm@latest
+
 COPY --chown=eks:eks .tmux.conf /home/eks/.tmux.conf
-
-# mise (project toolchain manager)
-RUN curl https://mise.run | sh
-ENV PATH="/home/eks/.local/bin:${PATH}"
-
-# zoxide (smart cd)
-RUN curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
-
-# pnpm
-RUN sudo npm install -g pnpm@latest
 
 # uv / uvx
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/home/eks/.local/bin:${PATH}"
 
 # bun / bunx
 RUN curl -fsSL https://bun.com/install | bash
@@ -87,7 +73,7 @@ ENV PATH="/home/eks/.cargo/bin:${PATH}"
 
 # AI tools
 RUN curl -fsSL https://claude.ai/install.sh | bash
-RUN sudo npm i -g @openai/codex
+RUN npm i -g @openai/codex
 
 WORKDIR /home/eks
 CMD ["bash"]
