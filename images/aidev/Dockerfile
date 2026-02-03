@@ -60,7 +60,6 @@ RUN git lfs install
 RUN bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" || true
 RUN sed -i 's/^OSH_THEME=.*/OSH_THEME="brainy"/' /home/eks/.bashrc
 
-COPY --chown=eks:eks .bashrcx /home/eks/.bashrcx
 RUN echo 'source /home/eks/.bashrcx' >> /home/eks/.bashrc
 
 COPY --chown=eks:eks .tmux.conf /home/eks/.tmux.conf
