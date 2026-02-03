@@ -10,6 +10,7 @@ RUN apt-get update \
     curl \
     git \
     build-essential \
+    openssh-client \
     unzip \
     locales \
     tzdata \

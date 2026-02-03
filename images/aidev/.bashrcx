@@ -28,3 +28,8 @@ fi
 
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
+
+# mise sops variables
+export CONTEXT_SOPS_AGE_KEY_FILE=/Users/mr00325ml/context/configs/age/context.txt
+export CONTEXT_ROPS_AGE_KEY_FILE=/Users/mr00325ml/context/configs/age/context.txt
+export CONTEXT_ROPS_CONFIG_FILE=/Users/mr00325ml/context/configs/rops/rops.toml
