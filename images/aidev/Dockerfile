@@ -9,6 +9,7 @@ RUN apt-get update \
     ca-certificates \
     curl \
     git \
+    git-lfs \
     build-essential \
     openssh-client \
     unzip \
@@ -23,6 +24,13 @@ RUN apt-get update \
     vim \
   && ln -sf /usr/bin/fdfind /usr/bin/fd \
   && rm -rf /var/lib/apt/lists/*
+
+# git-delta (syntax-highlighting pager for git)
+RUN ARCH=$(dpkg --print-architecture) \
+  && DELTA_VER="0.18.2" \
+  && curl -fsSL "https://github.com/dandavison/delta/releases/download/${DELTA_VER}/git-delta_${DELTA_VER}_${ARCH}.deb" -o /tmp/delta.deb \
+  && dpkg -i /tmp/delta.deb \
+  && rm /tmp/delta.deb
 
 # Node.js 24 via NodeSource
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
@@ -44,6 +52,9 @@ RUN useradd -m -s /bin/bash eks \
 
 # Switch to eks user
 USER eks
+
+# Git LFS
+RUN git lfs install
 
 # oh-my-bash
 RUN bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" || true
