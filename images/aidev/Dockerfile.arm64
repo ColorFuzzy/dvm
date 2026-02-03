@@ -69,10 +69,15 @@ COPY --chown=eks:eks .tmux.conf /home/eks/.tmux.conf
 # Git LFS
 RUN git lfs install
 
-# node / npm / npx / pnpm (via NodeSource)
-RUN curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash - \
-  && sudo apt-get install -y --no-install-recommends nodejs \
-  && sudo rm -rf /var/lib/apt/lists/*
+# node / npm / npx / pnpm (official binary, user-space)
+ENV NODE_VERSION=24
+RUN curl -fsSL https://nodejs.org/dist/latest-v${NODE_VERSION}.x/SHASUMS256.txt -o /tmp/SHASUMS256.txt \
+  && NODE_TAR=$(grep 'linux-arm64.tar.xz' /tmp/SHASUMS256.txt | awk '{print $2}') \
+  && curl -fsSL "https://nodejs.org/dist/latest-v${NODE_VERSION}.x/${NODE_TAR}" -o /tmp/node.tar.xz \
+  && mkdir -p /home/eks/.local/node \
+  && tar -xJf /tmp/node.tar.xz --strip-components=1 -C /home/eks/.local/node \
+  && rm /tmp/node.tar.xz /tmp/SHASUMS256.txt
+ENV PATH="/home/eks/.local/node/bin:${PATH}"
 RUN npm install -g pnpm@latest
 
 # uv / uvx
