@@ -9,6 +9,19 @@ permissions:
   contents: read
 
 jobs:
+  notify-start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Lark - Build Started
+        env:
+          LARK_WEBHOOK: ${{ secrets.LARK_WEBHOOK }}
+        run: |
+          curl -s -X POST -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg text "🔨 DVM Docker Build Started\n\n📦 Repo: ${{ github.repository }}\n🌿 Branch: ${{ github.ref_name }}\n📝 Commit: ${{ github.sha }}\n💬 Message: $(echo '${{ github.event.head_commit.message }}' | head -1)\n👤 Author: ${{ github.actor }}\n🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              '{msg_type: "text", content: {text: $text}}')" \
+            "$LARK_WEBHOOK"
+
   discover:
     runs-on: ubuntu-latest
     outputs:
@@ -133,3 +146,33 @@ jobs:
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ secrets.DOCKERHUB_USERNAME }}/dvm-${{ matrix.name }}:latest
+
+  notify-success:
+    runs-on: ubuntu-latest
+    needs: [discover, build, merge]
+    if: success()
+    steps:
+      - name: Notify Lark - Build Succeeded
+        env:
+          LARK_WEBHOOK: ${{ secrets.LARK_WEBHOOK }}
+        run: |
+          curl -s -X POST -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg text "✅ DVM Docker Build Succeeded\n\n📦 Repo: ${{ github.repository }}\n🌿 Branch: ${{ github.ref_name }}\n📝 Commit: ${{ github.sha }}\n💬 Message: $(echo '${{ github.event.head_commit.message }}' | head -1)\n👤 Author: ${{ github.actor }}\n🏷️ Images: ${{ needs.discover.outputs.count }} image(s) built & pushed\n🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              '{msg_type: "text", content: {text: $text}}')" \
+            "$LARK_WEBHOOK"
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: [discover, build, merge]
+    if: failure()
+    steps:
+      - name: Notify Lark - Build Failed
+        env:
+          LARK_WEBHOOK: ${{ secrets.LARK_WEBHOOK }}
+        run: |
+          curl -s -X POST -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg text "❌ DVM Docker Build Failed\n\n📦 Repo: ${{ github.repository }}\n🌿 Branch: ${{ github.ref_name }}\n📝 Commit: ${{ github.sha }}\n💬 Message: $(echo '${{ github.event.head_commit.message }}' | head -1)\n👤 Author: ${{ github.actor }}\n⚠️ Please check the workflow logs for details\n🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              '{msg_type: "text", content: {text: $text}}')" \
+            "$LARK_WEBHOOK"
