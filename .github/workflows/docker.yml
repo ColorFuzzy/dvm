@@ -152,11 +152,15 @@ jobs:
     needs: [discover, build, merge]
     if: success()
     steps:
+      - name: Generate date tag
+        id: date
+        run: echo "tag=$(date -u +'%Y%m%d-%H%M')" >> "$GITHUB_OUTPUT"
+
       - name: Notify Lark - Build Succeeded
         env:
           LARK_WEBHOOK: ${{ secrets.LARK_WEBHOOK }}
         run: |
-          MSG=$(printf '✅ DVM Docker Build Succeeded\n\n📦 Repo: ${{ github.repository }}\n🌿 Branch: ${{ github.ref_name }}\n📝 Commit: ${{ github.sha }}\n💬 Message: %s\n👤 Author: ${{ github.actor }}\n🏷️ Images: ${{ needs.discover.outputs.count }} image(s) built & pushed\n🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+          MSG=$(printf '✅ DVM Docker Build Succeeded\n\n📦 Repo: ${{ github.repository }}\n🌿 Branch: ${{ github.ref_name }}\n📝 Commit: ${{ github.sha }}\n💬 Message: %s\n👤 Author: ${{ github.actor }}\n🏷️ Images: ${{ needs.discover.outputs.count }} image(s) built & pushed\n🔖 Tags: latest, ${{ steps.date.outputs.tag }}\n🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
             "$(echo '${{ github.event.head_commit.message }}' | head -1)")
           curl -s -X POST -H "Content-Type: application/json" \
             -d "$(jq -n --arg text "$MSG" '{msg_type: "text", content: {text: $text}}')" \
@@ -167,11 +171,15 @@ jobs:
     needs: [discover, build, merge]
     if: failure()
     steps:
+      - name: Generate date tag
+        id: date
+        run: echo "tag=$(date -u +'%Y%m%d-%H%M')" >> "$GITHUB_OUTPUT"
+
       - name: Notify Lark - Build Failed
         env:
           LARK_WEBHOOK: ${{ secrets.LARK_WEBHOOK }}
         run: |
-          MSG=$(printf '❌ DVM Docker Build Failed\n\n📦 Repo: ${{ github.repository }}\n🌿 Branch: ${{ github.ref_name }}\n📝 Commit: ${{ github.sha }}\n💬 Message: %s\n👤 Author: ${{ github.actor }}\n⚠️ Please check the workflow logs for details\n🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+          MSG=$(printf '❌ DVM Docker Build Failed\n\n📦 Repo: ${{ github.repository }}\n🌿 Branch: ${{ github.ref_name }}\n📝 Commit: ${{ github.sha }}\n💬 Message: %s\n👤 Author: ${{ github.actor }}\n🔖 Tags: latest, ${{ steps.date.outputs.tag }}\n⚠️ Please check the workflow logs for details\n🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
             "$(echo '${{ github.event.head_commit.message }}' | head -1)")
           curl -s -X POST -H "Content-Type: application/json" \
             -d "$(jq -n --arg text "$MSG" '{msg_type: "text", content: {text: $text}}')" \
