@@ -48,13 +48,6 @@ RUN curl -fsSL https://github.com/dandavison/delta/releases/latest/download/git-
   && dpkg -i /tmp/git-delta.deb \
   && rm /tmp/git-delta.deb
 
-# zoxide (from GitHub Releases)
-RUN curl -fsSL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
-
-# mise (official installer)
-RUN curl https://mise.run | sh
-ENV PATH="/root/.local/bin:${PATH}"
-
 # Switch to eks user
 USER eks
 
@@ -65,6 +58,13 @@ RUN sed -i 's/^OSH_THEME=.*/OSH_THEME="brainy"/' /home/eks/.bashrc
 RUN echo 'source /home/eks/.bashrcx' >> /home/eks/.bashrc
 
 COPY --chown=eks:eks .tmux.conf /home/eks/.tmux.conf
+
+# zoxide (from GitHub Releases)
+RUN curl -fsSL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+
+# mise (official installer)
+RUN curl https://mise.run | sh
+ENV PATH="/home/eks/.local/bin:${PATH}"
 
 # Git LFS
 RUN git lfs install
