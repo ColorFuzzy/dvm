@@ -13,6 +13,8 @@ RUN apt-get update \
     git \
     build-essential \
     openssh-client \
+    pkg-config \
+    libssl-dev \
     unzip \
     locales \
     tzdata \
