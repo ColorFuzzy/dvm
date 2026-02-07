@@ -94,6 +94,9 @@ ENV PATH="/home/eks/.bun/bin:${PATH}"
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
 ENV PATH="/home/eks/.cargo/bin:${PATH}"
 
+# cargo-watch
+RUN cargo install cargo-watch --locked
+
 # AI tools
 RUN curl -fsSL https://claude.ai/install.sh | bash
 RUN npm i -g @openai/codex
