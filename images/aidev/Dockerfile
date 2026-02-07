@@ -13,6 +13,7 @@ RUN apt-get update \
     git \
     build-essential \
     openssh-client \
+    openssh-server \
     pkg-config \
     libssl-dev \
     unzip \
@@ -31,24 +32,36 @@ ENV LC_ALL=en_US.UTF-8
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Create user eks with sudo privileges
-RUN useradd -m -s /bin/bash eks \
-  && echo 'eks ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+# Create user aidev with sudo privileges
+RUN useradd -m -s /bin/bash aidev \
+  && echo 'aidev:123456' | chpasswd \
+  && echo 'aidev ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-# Switch to eks user
-USER eks
+# Configure SSH
+RUN mkdir -p /run/sshd \
+  && ssh-keygen -A \
+  && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
+  && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config \
+  && mkdir -p /home/aidev/.ssh \
+  && chmod 700 /home/aidev/.ssh \
+  && chown aidev:aidev /home/aidev/.ssh
+
+EXPOSE 22
+
+# Switch to aidev user
+USER aidev
 
 # oh-my-bash
 RUN bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" || true
-RUN sed -i 's/^OSH_THEME=.*/OSH_THEME="brainy"/' /home/eks/.bashrc
+RUN sed -i 's/^OSH_THEME=.*/OSH_THEME="brainy"/' /home/aidev/.bashrc
 
-RUN echo 'source /home/eks/.bashrcx' >> /home/eks/.bashrc
+RUN echo 'source /home/aidev/.bashrcx' >> /home/aidev/.bashrc
 
 # Homebrew
 RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 
-COPY --chown=eks:eks Brewfile /tmp/Brewfile
+COPY --chown=aidev:aidev Brewfile /tmp/Brewfile
 RUN brew bundle --file /tmp/Brewfile
 
 # Git LFS
@@ -59,19 +72,19 @@ RUN brew install node@24 || brew install node
 ENV PATH="/home/linuxbrew/.linuxbrew/opt/node@24/bin:/home/linuxbrew/.linuxbrew/opt/node/bin:${PATH}"
 RUN npm install -g pnpm@latest
 
-COPY --chown=eks:eks .tmux.conf /home/eks/.tmux.conf
+COPY --chown=aidev:aidev .tmux.conf /home/aidev/.tmux.conf
 
 # uv / uvx
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/home/eks/.local/bin:${PATH}"
+ENV PATH="/home/aidev/.local/bin:${PATH}"
 
 # bun / bunx
 RUN curl -fsSL https://bun.com/install | bash
-ENV PATH="/home/eks/.bun/bin:${PATH}"
+ENV PATH="/home/aidev/.bun/bin:${PATH}"
 
 # rustup (official installer)
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
-ENV PATH="/home/eks/.cargo/bin:${PATH}"
+ENV PATH="/home/aidev/.cargo/bin:${PATH}"
 
 # cargo-watch
 RUN cargo install cargo-watch --locked
@@ -80,5 +93,5 @@ RUN cargo install cargo-watch --locked
 RUN curl -fsSL https://claude.ai/install.sh | bash
 RUN npm i -g @openai/codex
 
-WORKDIR /home/eks
-CMD ["bash"]
+WORKDIR /home/aidev
+CMD ["/usr/sbin/sshd", "-D"]
