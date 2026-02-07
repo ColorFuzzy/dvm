@@ -39,7 +39,9 @@ RUN useradd -m -s /bin/bash aidev \
 
 # Configure SSH
 RUN mkdir -p /run/sshd \
-  && ssh-keygen -A \
+  && ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N '' \
+  && ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key -N '' \
+  && ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N '' \
   && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
   && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config \
   && mkdir -p /home/aidev/.ssh \
