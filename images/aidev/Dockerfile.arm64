@@ -36,16 +36,10 @@ RUN useradd -m -s /bin/bash aidev \
   && echo 'aidev ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Configure SSH
-RUN mkdir -p /run/sshd \
-  && rm -f /etc/ssh/ssh_host_*_key* \
-  && ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N '' \
-  && ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key -N '' \
-  && ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N '' \
-  && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
-  && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config \
-  && mkdir -p /home/aidev/.ssh \
+RUN mkdir -p /run/sshd /home/aidev/.ssh \
   && chmod 700 /home/aidev/.ssh \
-  && chown aidev:aidev /home/aidev/.ssh
+  && chown aidev:aidev /home/aidev/.ssh \
+  && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
 EXPOSE 22
 
@@ -118,4 +112,4 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 RUN npm i -g @openai/codex
 
 WORKDIR /home/aidev
-CMD ["/usr/sbin/sshd", "-D"]
+CMD ["sleep", "infinity"]
