@@ -20,6 +20,7 @@ RUN apt-get update \
     locales \
     tzdata \
     telnet \
+    iputils-ping \
     sudo \
   && rm -rf /var/lib/apt/lists/*
 
@@ -67,7 +68,7 @@ RUN git lfs install
 # node / npm / npx / pnpm
 RUN brew install node@24 || brew install node
 ENV PATH="/home/linuxbrew/.linuxbrew/opt/node@24/bin:/home/linuxbrew/.linuxbrew/opt/node/bin:${PATH}"
-RUN npm install -g pnpm@latest
+RUN npm install -g pnpm@latest pyright
 
 COPY --chown=aidev:aidev .tmux.conf /home/aidev/.tmux.conf
 

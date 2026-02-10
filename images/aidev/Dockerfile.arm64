@@ -18,6 +18,7 @@ RUN apt-get update \
     locales \
     tzdata \
     telnet \
+    iputils-ping \
     sudo \
   && rm -rf /var/lib/apt/lists/*
 
@@ -90,7 +91,7 @@ RUN curl -fsSL https://nodejs.org/dist/latest-v${NODE_VERSION}.x/SHASUMS256.txt 
   && tar -xJf /tmp/node.tar.xz --strip-components=1 -C /home/aidev/.local/node \
   && rm /tmp/node.tar.xz /tmp/SHASUMS256.txt
 ENV PATH="/home/aidev/.local/node/bin:${PATH}"
-RUN npm install -g pnpm@latest
+RUN npm install -g pnpm@latest pyright
 
 # uv / uvx
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
