@@ -22,6 +22,7 @@ RUN apt-get update \
     telnet \
     iputils-ping \
     sudo \
+    lsof \
   && rm -rf /var/lib/apt/lists/*
 
 # Locale
